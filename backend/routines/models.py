@@ -1,6 +1,11 @@
 from django.db import models
 from django.core.validators import RegexValidator
 import uuid
+#Validators
+hex_color_validator = RegexValidator(
+        regex=r'^#(?:[0-9a-fA-F]{3}){1,2}$',
+        message='Ingresa un color hexadecimal válido (ej: #FF5733)'
+    )
 
 # Create your models here.
 class Gym(models.Model):
@@ -12,12 +17,7 @@ class Gym(models.Model):
     )
     logo = models.URLField()
     created_at = models.DateTimeField(auto_now_add=True)
-    qr_image = models.ImageField(upload_to="qrs/", blank=True, null=True)
-    hex_color_validator = RegexValidator(
-        regex=r'^#(?:[0-9a-fA-F]{3}){1,2}$',
-        message='Ingresa un color hexadecimal válido (ej: #FF5733)'
-    )
-    
+    qr_image = models.ImageField(upload_to="qrs/", blank=True, null=True)    
     primary_color = models.CharField(
         max_length=7,
         validators=[hex_color_validator],
