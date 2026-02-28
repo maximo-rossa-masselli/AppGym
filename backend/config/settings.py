@@ -54,7 +54,8 @@ ROOT_URLCONF = 'config.urls'
 DATABASES = {
     'default': dj_database_url.config(
         default=os.environ.get('DATABASE_URL', f'sqlite:///{BASE_DIR / "db.sqlite3"}'),
-        conn_max_age=600
+        conn_max_age=0, 
+        ssl_require=not DEBUG # Solo requiere SSL si no estamos en modo desarrollo
     )
 }
 
