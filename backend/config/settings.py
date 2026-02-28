@@ -26,12 +26,14 @@ SECRET_KEY = os.environ.get('SECRET_KEY', default='alberto1966')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = 'RENDER' not in os.environ
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"] # Añadimos 0.0.0.0 por el bind de Gunicorn
 
-RENDER_EXTERNAL_HOST_NAME = os.environ.get('RENDER_EXTERNAL_HOST_NAME')
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME') # Ojo: Verifica si es HOSTNAME o HOST_NAME en tu panel
 
-if RENDER_EXTERNAL_HOST_NAME: 
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOST_NAME)
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+    # Recomendado: Añadir la variante con 'onrender.com' por si acaso
+    ALLOWED_HOSTS.append(".onrender.com")
 
 # Application definition
 
@@ -130,6 +132,11 @@ STATIC_URL = 'static/'
 if not DEBUG:
     STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    CSRF_TRUSTED_ORIGINS = [f"https://{RENDER_EXTERNAL_HOSTNAME}"] if RENDER_EXTERNAL_HOSTNAME else []
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
