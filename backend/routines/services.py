@@ -1,4 +1,5 @@
 import time
+from django.http import Http404
 from django.utils import timezone
 from django.db import transaction
 from django.shortcuts import get_object_or_404
@@ -33,5 +34,12 @@ def get_or_create_today_routine():
     return routine
 
 def get_gym_by_uuid(uuid):
-    print(f"DEBUG: Buscando gimnasio con UUID: {uuid}")
-    return get_object_or_404(Gym, qr_token=uuid)
+    try:
+        print(f"DEBUG: Buscando gimnasio con UUID: {uuid}")
+        return Gym.objects.get(qr_token=uuid)
+    except Gym.DoesNotExist:
+        print(f"ERROR: El gimnasio con UUID {uuid} NO EXISTE en la base de datos.")
+        raise Http404("Gimnasio no encontrado")
+    except Exception as e:
+        print(f"ERROR CRÍTICO DE CONEXIÓN: {e}")
+        raise e
