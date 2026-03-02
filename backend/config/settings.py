@@ -50,37 +50,25 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'config.urls'
 
-# 6. Base de Datos (Configuración Manual para evitar errores de DSN)
-import urllib.parse as urlparse
+# 6. Base de Datos (Configuración compatible con Django 5.x + Supabase)
+import dj_database_url
 
-tmp_url = os.environ.get('DATABASE_URL')
+DATABASES = {
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL', f'sqlite:///{BASE_DIR / "db.sqlite3"}'),
+        conn_max_age=0, # Importante: 0 ayuda a evitar saturar el pooler
+        ssl_require=not DEBUG
+    )
+}
 
-if tmp_url:
-    # Si estamos en Render, parseamos la URL a mano
-    url = urlparse.urlparse(tmp_url)
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': url.path[1:],
-            'USER': url.username,
-            'PASSWORD': url.password,
-            'HOST': url.hostname,
-            'PORT': url.port,
-            'OPTIONS': {
-                'sslmode': 'require',
-                'prepare_threshold': 0, # <--- Aquí es donde Supabase no se rompe
-            }
-        }
+# Fix para Supabase Pooler (Puerto 6543)
+if not DEBUG:
+    # Usamos la opción de 'server_side_parameters' para que psycopg2
+    # no lo valide como una opción de conexión (DSN)
+    DATABASES['default']['OPTIONS'] = {
+        'sslmode': 'require',
+        'options': '-c prepare_threshold=0'
     }
-else:
-    # Si estamos en local (PC), usamos SQLite
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
-
 # 7. Plantillas y Auth
 TEMPLATES = [
     {
