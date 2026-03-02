@@ -50,20 +50,35 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'config.urls'
 
-# 6. Base de Datos (Supabase / SQLite)
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL', f'sqlite:///{BASE_DIR / "db.sqlite3"}'),
-        conn_max_age=600,
-        ssl_require=not DEBUG
-    )
-}
+# 6. Base de Datos (Configuración Manual para evitar errores de DSN)
+import urllib.parse as urlparse
 
-# Fix para Supabase: Pasamos el parámetro solo si estamos en producción
-if not DEBUG and 'default' in DATABASES:
-    # Usamos 'OPTIONS' pero nos aseguramos de que sea un diccionario limpio
-    DATABASES['default']['OPTIONS'] = {
-        'prepare_threshold': 0,
+tmp_url = os.environ.get('DATABASE_URL')
+
+if tmp_url:
+    # Si estamos en Render, parseamos la URL a mano
+    url = urlparse.urlparse(tmp_url)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': url.path[1:],
+            'USER': url.username,
+            'PASSWORD': url.password,
+            'HOST': url.hostname,
+            'PORT': url.port,
+            'OPTIONS': {
+                'sslmode': 'require',
+                'prepare_threshold': 0, # <--- Aquí es donde Supabase no se rompe
+            }
+        }
+    }
+else:
+    # Si estamos en local (PC), usamos SQLite
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
 
 # 7. Plantillas y Auth
