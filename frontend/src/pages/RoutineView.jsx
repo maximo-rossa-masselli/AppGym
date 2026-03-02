@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { getRoutine } from "../api/publicApi";
+import { getRoutine } from "../api/PublicApi";
 import PageWrapper from "../components/layout/PageWrapper";
 import GymHeader from "../components/gym/GymHeader";
 import RoutineCard from "../components/routine/RoutineCard";
