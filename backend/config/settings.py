@@ -124,10 +124,6 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
-    DATABASES['default']['OPTIONS'] = {
-        'prepare_threshold': 0,
-    }
-
 # 11. Terceros (CORS y API Keys)
 CORS_ALLOW_ALL_ORIGINS = True # Ajustar en el futuro por seguridad
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
