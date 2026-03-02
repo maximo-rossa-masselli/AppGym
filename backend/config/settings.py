@@ -59,10 +59,12 @@ DATABASES = {
     )
 }
 
-# Fix específico para evitar el error de DSN y el timeout de Supabase
-if not DEBUG:
-    DATABASES['default'].setdefault('OPTIONS', {})
-    DATABASES['default']['OPTIONS']['prepare_threshold'] = 0
+# Fix para Supabase: Pasamos el parámetro solo si estamos en producción
+if not DEBUG and 'default' in DATABASES:
+    # Usamos 'OPTIONS' pero nos aseguramos de que sea un diccionario limpio
+    DATABASES['default']['OPTIONS'] = {
+        'prepare_threshold': 0,
+    }
 
 # 7. Plantillas y Auth
 TEMPLATES = [
