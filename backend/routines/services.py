@@ -6,14 +6,17 @@ from .ai import generar_rutina
 
 def get_or_create_today_routine():
     today = timezone.localdate()
+    
+    routine, created = GlobalDailyRoutine.objects.get_or_create(date=today)
 
-    with transaction.atomic():
-        routine, created = GlobalDailyRoutine.objects.get_or_create(date=today)
-        
-        if created:
-            routine.routines = generar_rutina()
+    if created or not routine.routines:
+        try:
+            nuevas_rutinas = generar_rutina()
+            routine.routines = nuevas_rutinas
             routine.save()
-
+        except Exception as e:
+            print(f"Error en Gemini: {e}")
+            
     return routine
 
 
