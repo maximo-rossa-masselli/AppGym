@@ -61,14 +61,6 @@ DATABASES = {
     )
 }
 
-# Fix para Supabase Pooler (Puerto 6543)
-if not DEBUG:
-    # Usamos la opción de 'server_side_parameters' para que psycopg2
-    # no lo valide como una opción de conexión (DSN)
-    DATABASES['default']['OPTIONS'] = {
-        'sslmode': 'require',
-        'options': '-c prepare_threshold=0'
-    }
 # 7. Plantillas y Auth
 TEMPLATES = [
     {
