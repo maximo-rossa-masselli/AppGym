@@ -1,21 +1,18 @@
 import json
+import time
 from django.conf import settings
 from google import genai
 from google.genai import types
 
 client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
-
 def generar_rutina():
     prompt = """
 Generate a daily gym routine in VALID JSON format.
-
 IMPORTANT:
 - All exercise names must be written in Spanish.
 - Use common commercial gym exercise names in Spanish.
-
 The JSON structure must be EXACTLY:
-
 {
     "upper_body": [
         {"name": "Exercise name", "sets": number, "reps": number}
@@ -24,9 +21,7 @@ The JSON structure must be EXACTLY:
         {"name": "Exercise name", "sets": number, "reps": number}
     ]
 }
-
 STRICT RULES:
-
 1) Output ONLY valid JSON.
 2) Do NOT include explanations.
 3) Do NOT include markdown.
@@ -44,61 +39,44 @@ UPPER BODY REQUIREMENTS:
 - Exactly 6 exercises.
 - All exercises must target torso muscles.
 - Randomly choose ONE of these distributions:
-
-Option A:
-- 2 chest
-- 1 back
-- 1 shoulders
-- 1 biceps
-- 1 triceps
-
-Option B:
-- 2 back
-- 1 chest
-- 1 shoulders
-- 1 biceps
-- 1 triceps
-
-- Include a mix of compound and accessory exercises.
-- Compound exercises must have lower reps (4–8).
-- Accessory exercises must have higher reps (10–15).
-- Sets must be between 3 and 4.
+Option A: 2 chest, 1 back, 1 shoulders, 1 biceps, 1 triceps
+Option B: 2 back, 1 chest, 1 shoulders, 1 biceps, 1 triceps
 
 LOWER BODY REQUIREMENTS:
 - Exactly 5 exercises.
 - All exercises must target lower body.
-- Include:
-    - 2 quad-dominant exercises (1 compound, 1 accessory)
-    - 2 hamstring-dominant exercises (1 compound, 1 accessory)
-    - 1 calf exercise
-- Compound exercises must have lower reps (4–8).
-- Accessory exercises must have higher reps (10–15).
-- Sets must be between 3 and 4.
+- Include: 2 quad-dominant, 2 hamstring-dominant, 1 calf.
 
 Return ONLY valid JSON.
 """
 
-    try:
-        print("Rutina de GENAI")
-        response = client.models.generate_content(
-            model="gemini-3-flash-preview",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=1.0,
-                response_mime_type="application/json",
-            ),
-        )
+    intentos_maximos = 3
+    for intento in range(intentos_maximos):
+        try:
+            print(f"DEBUG: Llamando a Gemini (Intento {intento + 1}/{intentos_maximos})...")
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    temperature=1.0,
+                    response_mime_type="application/json",
+                ),
+            )
 
-        content = response.text.strip()
-        return json.loads(content)
+            content = response.text.strip()
+            return json.loads(content)
 
-    except Exception as e:
-        print(f"Error generating routine with Gemini: {e}")
-        return rutina_fallback()
-
+        except Exception as e:
+            print(f"DEBUG: Error en intento {intento + 1}: {e}")
+            if intento < intentos_maximos - 1:
+                # Esperamos 2 segundos antes de reintentar (útil para errores 503)
+                time.sleep(2)
+            else:
+                # Si fallaron todos los intentos, lanzamos el error al servicio
+                raise e
 
 def rutina_fallback():
-    print("Rutina fallback")
+    print("DEBUG: Generando rutina de emergencia (Fallback)")
     return {
         "upper_body": [
             {"name": "Flexiones", "sets": 3, "reps": 12},
